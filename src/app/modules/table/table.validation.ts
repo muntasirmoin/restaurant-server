@@ -1,0 +1,1 @@
+ import { z } from "zod"; export const createTableValidation = z.object({ number: z.number().int().positive("table number must be a positive integer"), }); export const updateTableValidation = z.object({ number: z.number().int().positive().optional(), status: z.enum(["free", "occupied"]).optional(), });

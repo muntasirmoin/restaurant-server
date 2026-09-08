@@ -1,0 +1,11 @@
+import { Router } from "express";
+import { checkAuth } from "../../middlewares/checkAuth";
+import { validateRequest } from "../../middlewares/validateRequest";
+import { loginValidation } from "./auth.validation";
+import { login, refreshToken, logout, me } from "./auth.controller";
+const router = Router();
+router.post("/login", validateRequest(loginValidation), login);
+router.post("/refresh-token", refreshToken);
+router.post("/logout", logout);
+router.get("/me", checkAuth(), me);
+export const AuthRoutes = router;

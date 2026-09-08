@@ -1,0 +1,11 @@
+import { Router } from "express";
+import { checkAuth } from "../../middlewares/checkAuth";
+import { validateRequest } from "../../middlewares/validateRequest";
+import { createUserValidation, updateUserValidation } from "./user.validation";
+import { listUsers, createUser, updateUser } from "./user.controller";
+const router = Router();
+router.use(checkAuth("administrator"));
+router.get("/", listUsers);
+router.post("/", validateRequest(createUserValidation), createUser);
+router.patch("/:id", validateRequest(updateUserValidation), updateUser);
+export const UserRoutes = router;
