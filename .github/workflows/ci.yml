@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - run: npm ci
+
+      - name: Create .env for CI
+        run: |
+          echo "PORT=5000" >> .env
+          echo "DB_URL=mongodb://unused-in-ci" >> .env
+          echo "NODE_ENV=development" >> .env
+          echo "JWT_ACCESS_SECRET=ci_test_secret" >> .env
+          echo "JWT_ACCESS_EXPIRES=1d" >> .env
+          echo "JWT_REFRESH_SECRET=ci_test_refresh_secret" >> .env
+          echo "JWT_REFRESH_EXPIRES=30d" >> .env
+          echo "ADMIN_NAME=CI Admin" >> .env
+          echo "ADMIN_USERNAME=ciadmin" >> .env
+          echo "ADMIN_PASSWORD=ciadminpass" >> .env
+          echo "FRONTEND_URL=http://localhost:5173" >> .env
+          echo "TEST_DB_URL=${{ secrets.TEST_DB_URL }}" >> .env
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
