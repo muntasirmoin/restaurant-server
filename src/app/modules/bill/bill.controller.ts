@@ -24,3 +24,7 @@ export const listBills = catchAsync(async (req, res) => {
     data: bills,
   });
 });
+
+export const downloadReceipt = catchAsync(async (req, res) => {
+  await BillServices.streamBillReceipt(req.params.id as string, res);
+});
