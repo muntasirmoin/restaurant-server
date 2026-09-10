@@ -4,6 +4,11 @@ import Order from "../order/order.model";
 import Bill from "./bill.model";
 import AppError from "../../helpers/AppError";
 import { getIO } from "../../sockets";
+
+import PDFDocument from "pdfkit";
+import { Response } from "express"; 
+
+
 interface GenerateBillInput {
   orderId: string;
   discount: number;
@@ -56,4 +61,58 @@ const generateBill = async (input: GenerateBillInput) => {
 };
 const listBills = async () =>
   Bill.find().sort({ createdAt: -1 }).populate("order generatedBy");
-export const BillServices = { generateBill, listBills };
+
+
+const streamBillReceipt = async (billId: string, res: Response) => {
+  const bill = await Bill.findById(billId).populate({
+    path: "order",
+    populate: { path: "table createdBy confirmedBy" },
+  });
+
+  if (!bill) throw new AppError(httpStatus.NOT_FOUND, "Bill not found");
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const order = bill.order as any;
+
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader(
+    "Content-Disposition",
+    `attachment; filename=receipt-${bill._id}.pdf`,
+  );
+
+  const doc = new PDFDocument({ margin: 50 });
+  doc.pipe(res);
+  doc.fontSize(18).text("Restaurant OMS", { align: "center" });
+  doc.fontSize(10).text("Receipt", { align: "center" });
+  doc.moveDown();
+  doc.fontSize(10);
+  doc.text(`Bill ID: ${bill._id}`);
+  doc.text(
+    `Date: ${new Date(bill.createdAt as unknown as string).toLocaleString()}`,
+  );
+  doc.text(`Payment method: ${bill.paymentMethod}`);
+  doc.moveDown();
+  doc.fontSize(12).text("Items", { underline: true });
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  order.items.forEach((item: any) => {
+    doc
+      .fontSize(10)
+      .text(
+        `${item.quantity} x ${item.name} - $${(item.price * item.quantity).toFixed(2)}`,
+      );
+  });
+
+  doc.moveDown();
+  doc.fontSize(10).text(`Subtotal: $${bill.subtotal.toFixed(2)}`);
+  doc.text(`Tax: $${bill.taxAmount.toFixed(2)}`);
+  doc.text(`Discount: -$${bill.discount.toFixed(2)}`);
+  doc.fontSize(12).text(`Total: $${bill.total.toFixed(2)}`, { underline: true });
+  doc.moveDown(2);
+  doc.fontSize(9).text("Thank you for dining with us!", { align: "center" });
+  doc.end();
+};
+
+
+
+export const BillServices = { generateBill, listBills, streamBillReceipt };
