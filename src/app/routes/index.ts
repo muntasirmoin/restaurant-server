@@ -5,6 +5,7 @@ import { MenuRoutes } from "../modules/menu/menu.route";
 import { OrderRoutes } from "../modules/order/order.route";
 import { BillRoutes } from "../modules/bill/bill.route";
 import { TableRoutes } from "../modules/table/table.route";
+import { ReportRoutes } from "../modules/report/report.route";
 
 export const router = Router();
 
@@ -15,6 +16,7 @@ const moduleRoutes = [
   { path: "/orders", route: OrderRoutes },
   { path: "/bills", route: BillRoutes },
   { path: "/tables", route: TableRoutes },
+  { path: "/reports", route: ReportRoutes },
 ];
 
 moduleRoutes.forEach((route) => {
