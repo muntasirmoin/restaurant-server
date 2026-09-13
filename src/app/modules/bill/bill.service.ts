@@ -6,8 +6,10 @@ import AppError from "../../helpers/AppError";
 import { getIO } from "../../sockets";
 
 import PDFDocument from "pdfkit";
-import { Response } from "express"; 
+import { Response } from "express";
 
+import { QueryFilter } from "mongoose";
+import { IBill } from "./bill.interface";
 
 interface GenerateBillInput {
   orderId: string;
@@ -59,9 +61,19 @@ const generateBill = async (input: GenerateBillInput) => {
     throw err;
   }
 };
-const listBills = async () =>
-  Bill.find().sort({ createdAt: -1 }).populate("order generatedBy");
-
+const listBills = async (date?: string) => {
+  const filter: QueryFilter<IBill> = {};
+  if (date) {
+    const start = new Date(date);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(date);
+    end.setHours(23, 59, 59, 999);
+    filter.createdAt = { $gte: start, $lte: end };
+  }
+  return Bill.find(filter)
+    .sort({ createdAt: -1 })
+    .populate("order generatedBy");
+};
 
 const streamBillReceipt = async (billId: string, res: Response) => {
   const bill = await Bill.findById(billId).populate({
@@ -107,12 +119,12 @@ const streamBillReceipt = async (billId: string, res: Response) => {
   doc.fontSize(10).text(`Subtotal: $${bill.subtotal.toFixed(2)}`);
   doc.text(`Tax: $${bill.taxAmount.toFixed(2)}`);
   doc.text(`Discount: -$${bill.discount.toFixed(2)}`);
-  doc.fontSize(12).text(`Total: $${bill.total.toFixed(2)}`, { underline: true });
+  doc
+    .fontSize(12)
+    .text(`Total: $${bill.total.toFixed(2)}`, { underline: true });
   doc.moveDown(2);
   doc.fontSize(9).text("Thank you for dining with us!", { align: "center" });
   doc.end();
 };
-
-
 
 export const BillServices = { generateBill, listBills, streamBillReceipt };
