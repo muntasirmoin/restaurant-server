@@ -34,6 +34,16 @@ const generateBill = async (input: GenerateBillInput) => {
     const subtotal = order.total;
     const taxAmount = +(subtotal * taxRate).toFixed(2);
     const total = +(subtotal + taxAmount - discount).toFixed(2);
+
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 999);
+    const countToday = await Bill.countDocuments({
+      createdAt: { $gte: startOfDay, $lte: endOfDay },
+    }).session(session);
+    const billNumber = countToday + 1;
+
     const [bill] = await Bill.create(
       [
         {
@@ -45,6 +55,7 @@ const generateBill = async (input: GenerateBillInput) => {
           total,
           paymentMethod,
           generatedBy: generatedById,
+          billNumber,
         },
       ],
       { session },
