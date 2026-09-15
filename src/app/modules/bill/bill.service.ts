@@ -108,40 +108,104 @@ const streamBillReceipt = async (
     `${disposition}; filename=receipt-${bill._id}.pdf`,
   );
 
-  const doc = new PDFDocument({ margin: 50 });
+  const doc = new PDFDocument({ margin: 0, size: [350, 550] });
   doc.pipe(res);
-
-  doc.fontSize(18).text("Restaurant OMS", { align: "center" });
-  doc.fontSize(10).text("Receipt", { align: "center" });
-  doc.moveDown();
-  doc.fontSize(10);
-  doc.text(`Bill ID: ${bill._id}`);
-  doc.text(
-    `Date: ${new Date(bill.createdAt as unknown as string).toLocaleString()}`,
-  );
-  doc.text(`Payment method: ${bill.paymentMethod}`);
-  doc.moveDown();
-
-  doc.fontSize(12).text("Items", { underline: true });
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  order.items.forEach((item: any) => {
-    doc
-      .fontSize(10)
-      .text(
-        `${item.quantity} x ${item.name} - $${(item.price * item.quantity).toFixed(2)}`,
-      );
-  });
-
-  doc.moveDown();
-  doc.fontSize(10).text(`Subtotal: $${bill.subtotal.toFixed(2)}`);
-  doc.text(`Tax: $${bill.taxAmount.toFixed(2)}`);
-  doc.text(`Discount: -$${bill.discount.toFixed(2)}`);
+  doc.rect(0, 0, doc.page.width, 90).fill("#0a1628");
   doc
-    .fontSize(12)
-    .text(`Total: $${bill.total.toFixed(2)}`, { underline: true });
-  doc.moveDown(2);
-  doc.fontSize(9).text("Thank you for dining with us!", { align: "center" });
+    .fillColor("#ffffff")
+    .font("Helvetica-Bold")
+    .fontSize(20)
+    .text("Restaurant OMS", 0, 28, { align: "center" });
+  doc
+    .font("Helvetica")
+    .fontSize(9)
+    .text("Thank you for dining with us", 0, 55, { align: "center" });
+  const billDate = new Date(bill.createdAt as unknown as string);
+  const dateStr = `${String(billDate.getDate()).padStart(2, "0")}-${String(billDate.getMonth() + 1).padStart(2, "0")}-${billDate.getFullYear()}`;
+  let y = 112;
+  doc.fillColor("#555555").fontSize(9).font("Helvetica");
+  doc.text(
+    `Date: ${billDate.toLocaleDateString()} Time: ${billDate.toLocaleTimeString()}`,
+    30,
+    y,
+  );
+  y += 14;
+  doc.text(`Bill ID: ${dateStr}/${bill.billNumber}`, 30, y);
+  y += 14;
+  doc.text(`Payment: ${bill.paymentMethod.toUpperCase()}`, 30, y);
+  y += 20;
+  doc
+    .moveTo(30, y)
+    .lineTo(doc.page.width - 30, y)
+    .strokeColor("#dddddd")
+    .stroke();
+  y += 12;
+  const col = { sl: 30, item: 55, unit: 170, qty: 225, price: 260 };
+  doc.fillColor("#0a1628").font("Helvetica-Bold").fontSize(9);
+  doc.text("SL", col.sl, y, { width: 20 });
+  doc.text("Item", col.item, y, { width: 110 });
+  doc.text("Unit", col.unit, y, { width: 50, align: "right" });
+  doc.text("Qty", col.qty, y, { width: 30, align: "right" });
+  doc.text("Price", col.price, y, { width: 60, align: "right" });
+  y += 16;
+  doc
+    .moveTo(30, y)
+    .lineTo(doc.page.width - 30, y)
+    .strokeColor("#dddddd")
+    .stroke();
+  y += 10; // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  order.items.forEach((item: any, index: number) => {
+    doc.fillColor("#333333").font("Helvetica").fontSize(9);
+    doc.text(`${index + 1}`, col.sl, y, { width: 20 });
+    doc.text(item.name, col.item, y, { width: 110 });
+    doc.text(`$${item.price.toFixed(2)}`, col.unit, y, {
+      width: 50,
+      align: "right",
+    });
+    doc.text(`${item.quantity}`, col.qty, y, { width: 30, align: "right" });
+    doc.text(`$${(item.price * item.quantity).toFixed(2)}`, col.price, y, {
+      width: 60,
+      align: "right",
+    });
+    y += 16;
+  });
+  y += 6;
+  doc
+    .moveTo(30, y)
+    .lineTo(doc.page.width - 30, y)
+    .strokeColor("#dddddd")
+    .stroke();
+  y += 14;
+  const totalsRow = (label: string, value: string, bold = false) => {
+    doc
+      .font(bold ? "Helvetica-Bold" : "Helvetica")
+      .fontSize(bold ? 13 : 10)
+      .fillColor(bold ? "#0a1628" : "#555555");
+    doc.text(label, 30, y, { width: 210 });
+    doc.text(value, 240, y, { width: 80, align: "right" });
+    y += bold ? 22 : 16;
+  };
+  totalsRow("Subtotal", `$${bill.subtotal.toFixed(2)}`);
+  totalsRow("Tax", `$${bill.taxAmount.toFixed(2)}`);
+  totalsRow("Discount", `-$${bill.discount.toFixed(2)}`);
+  y += 4;
+  doc
+    .moveTo(30, y)
+    .lineTo(doc.page.width - 30, y)
+    .strokeColor("#0a1628")
+    .lineWidth(1.5)
+    .stroke();
+  y += 10;
+  totalsRow("Total", `$${bill.total.toFixed(2)}`, true);
+  y += 40;
+  doc
+    .fillColor("#999999")
+    .font("Helvetica-Oblique")
+    .fontSize(9)
+    .text("We hope to see you again soon!", 0, y, {
+      align: "center",
+      width: doc.page.width,
+    });
   doc.end();
 };
 
