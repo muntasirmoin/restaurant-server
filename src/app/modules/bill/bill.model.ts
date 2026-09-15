@@ -14,6 +14,7 @@ const billSchema = new Schema<IBill>(
       default: "unpaid",
     },
     generatedBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    billNumber: { type: Number, required: true },
   },
   { timestamps: true, versionKey: false },
 );
