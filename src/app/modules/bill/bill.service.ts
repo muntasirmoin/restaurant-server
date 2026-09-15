@@ -142,11 +142,11 @@ const streamBillReceipt = async (
   y += 12;
   const col = { sl: 30, item: 55, unit: 170, qty: 225, price: 260 };
   doc.fillColor("#0a1628").font("Helvetica-Bold").fontSize(9);
-  doc.text("SL", col.sl, y, { width: 20 });
-  doc.text("Item", col.item, y, { width: 110 });
-  doc.text("Unit", col.unit, y, { width: 50, align: "right" });
-  doc.text("Qty", col.qty, y, { width: 30, align: "right" });
-  doc.text("Price", col.price, y, { width: 60, align: "right" });
+  doc.text("SL", col.sl, y, { width: 20, align: "center" });
+  doc.text("Item", col.item, y, { width: 110, align: "center" });
+  doc.text("Unit Price", col.unit, y, { width: 50, align: "center" });
+  doc.text("Qty", col.qty, y, { width: 30, align: "center" });
+  doc.text("Total", col.price, y, { width: 60, align: "right" });
   y += 16;
   doc
     .moveTo(30, y)
@@ -156,14 +156,14 @@ const streamBillReceipt = async (
   y += 10; // eslint-disable-next-line @typescript-eslint/no-explicit-any
   order.items.forEach((item: any, index: number) => {
     doc.fillColor("#333333").font("Helvetica").fontSize(9);
-    doc.text(`${index + 1}`, col.sl, y, { width: 20 });
-    doc.text(item.name, col.item, y, { width: 110 });
-    doc.text(`$${item.price.toFixed(2)}`, col.unit, y, {
+    doc.text(`${index + 1}`, col.sl, y, { width: 20, align: "center" });
+    doc.text(item.name, col.item, y, { width: 110, align: "center" });
+    doc.text(`${item.price.toFixed(2)} tk`, col.unit, y, {
       width: 50,
-      align: "right",
+      align: "center",
     });
-    doc.text(`${item.quantity}`, col.qty, y, { width: 30, align: "right" });
-    doc.text(`$${(item.price * item.quantity).toFixed(2)}`, col.price, y, {
+    doc.text(`${item.quantity}`, col.qty, y, { width: 30, align: "center" });
+    doc.text(`${(item.price * item.quantity).toFixed(2)} tk`, col.price, y, {
       width: 60,
       align: "right",
     });
@@ -185,9 +185,9 @@ const streamBillReceipt = async (
     doc.text(value, 240, y, { width: 80, align: "right" });
     y += bold ? 22 : 16;
   };
-  totalsRow("Subtotal", `$${bill.subtotal.toFixed(2)}`);
-  totalsRow("Tax", `$${bill.taxAmount.toFixed(2)}`);
-  totalsRow("Discount", `-$${bill.discount.toFixed(2)}`);
+  totalsRow("Subtotal", `${bill.subtotal.toFixed(2)} tk`);
+  totalsRow("Tax", `${bill.taxAmount.toFixed(2)} tk`);
+  totalsRow("Discount", `-${bill.discount.toFixed(2)} tk`);
   y += 4;
   doc
     .moveTo(30, y)
@@ -196,7 +196,7 @@ const streamBillReceipt = async (
     .lineWidth(1.5)
     .stroke();
   y += 10;
-  totalsRow("Total", `$${bill.total.toFixed(2)}`, true);
+  totalsRow("Total", `${bill.total.toFixed(2)} tk`, true);
   y += 40;
   doc
     .fillColor("#999999")
