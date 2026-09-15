@@ -9,6 +9,7 @@ export interface IBill {
   total: number;
   paymentMethod: "cash" | "card" | "mobile" | "unpaid";
   generatedBy: Types.ObjectId;
+  billNumber: number;
   createdAt?: Date;
   updatedAt?: Date;
 }
