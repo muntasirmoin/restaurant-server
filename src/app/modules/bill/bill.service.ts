@@ -75,7 +75,11 @@ const listBills = async (date?: string) => {
     .populate("order generatedBy");
 };
 
-const streamBillReceipt = async (billId: string, res: Response) => {
+const streamBillReceipt = async (
+  billId: string,
+  res: Response,
+  download: boolean,
+) => {
   const bill = await Bill.findById(billId).populate({
     path: "order",
     populate: { path: "table createdBy confirmedBy" },
@@ -87,13 +91,15 @@ const streamBillReceipt = async (billId: string, res: Response) => {
   const order = bill.order as any;
 
   res.setHeader("Content-Type", "application/pdf");
+  const disposition = download ? "attachment" : "inline";
   res.setHeader(
     "Content-Disposition",
-    `attachment; filename=receipt-${bill._id}.pdf`,
+    `${disposition}; filename=receipt-${bill._id}.pdf`,
   );
 
   const doc = new PDFDocument({ margin: 50 });
   doc.pipe(res);
+
   doc.fontSize(18).text("Restaurant OMS", { align: "center" });
   doc.fontSize(10).text("Receipt", { align: "center" });
   doc.moveDown();
@@ -104,6 +110,7 @@ const streamBillReceipt = async (billId: string, res: Response) => {
   );
   doc.text(`Payment method: ${bill.paymentMethod}`);
   doc.moveDown();
+
   doc.fontSize(12).text("Items", { underline: true });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

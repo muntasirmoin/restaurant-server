@@ -15,8 +15,18 @@ export const generateBill = catchAsync(async (req, res) => {
   });
 });
 
-export const listBills = catchAsync(async (req, res) => { const { date } = req.query as { date?: string }; const bills = await BillServices.listBills(date); sendResponse(res, { statusCode: httpStatus.OK, success: true, message: "Bills retrieved", data: bills }); });
+export const listBills = catchAsync(async (req, res) => {
+  const { date } = req.query as { date?: string };
+  const bills = await BillServices.listBills(date);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Bills retrieved",
+    data: bills,
+  });
+});
 
 export const downloadReceipt = catchAsync(async (req, res) => {
-  await BillServices.streamBillReceipt(req.params.id as string, res);
+  const download = req.query.download === "true";
+  await BillServices.streamBillReceipt(req.params.id as string, res, download);
 });
